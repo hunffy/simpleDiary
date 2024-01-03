@@ -9,7 +9,9 @@ const DiaryItem = ({
   onRemove,
   onEdit,
 }) => {
+  /*수정 상태관리(토글)*/
   const [isEdit, setIsEdit] = useState(false);
+  //수정 areatext상태관리
   const [localContent, setLocalContent] = useState(content);
 
   //삭제핸들러
