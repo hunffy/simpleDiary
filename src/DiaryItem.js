@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 const DiaryItem = ({
   author,
@@ -9,6 +9,9 @@ const DiaryItem = ({
   onRemove,
   onEdit,
 }) => {
+  useEffect(() => {
+    console.log(`${id}번째 아이템 랜더`);
+  });
   /*수정 상태관리(토글)*/
   const [isEdit, setIsEdit] = useState(false);
   //수정 areatext상태관리
@@ -81,4 +84,4 @@ const DiaryItem = ({
   );
 };
 
-export default DiaryItem;
+export default React.memo(DiaryItem);

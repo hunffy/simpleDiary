@@ -1,15 +1,36 @@
 import "./App.css";
 import DiaryEditor from "./DiaryEditor";
 import DiaryList from "./DiaryList";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useMemo, useCallback, useReducer } from "react";
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "INIT": {
+      return action.data;
+    }
+
+    case "CREATE":
+      const created_date = new Date().getTime();
+      const newItem = { ...action.data, created_date };
+      return [newItem, ...state];
+
+    case "REMOVE":
+      return state.filter((e) => e.id !== action.targetId);
+
+    case "EDIT":
+      return state.map((e) =>
+        e.id === action.targetId ? { ...e, content: action.newContent } : e
+      );
+    default:
+      return state;
+  }
+};
 
 function App() {
-  //
+  const [data, dispatch] = useReducer(reducer, []);
   const getData = async () => {
     const res = await fetch(
       "https://jsonplaceholder.typicode.com/comments"
     ).then((res) => res.json());
-    console.log(res);
 
     const initData = res.slice(0, 20).map((it) => {
       return {
@@ -20,21 +41,25 @@ function App() {
         id: dataId.current++,
       };
     });
-    setData(initData);
+    dispatch({ type: "INIT", data: initData });
   };
 
   useEffect(() => {
     getData();
   }, []);
   //추가될 일기 데이터 목록상태 관리
-  const [data, setData] = useState([]);
+  // const [data, setData] = useState([]);
 
   //추가되는 일기의 고유아이디
   const dataId = useRef(0);
 
   //추가 일기 함수
-  const onCreate = (author, content, emotion) => {
+  const onCreate = useCallback((author, content, emotion) => {
     const created_date = new Date().getTime();
+    dispatch({
+      type: "CREATE",
+      data: { author, content, emotion, id: dataId.current },
+    });
     const newItem = {
       author,
       content,
@@ -43,26 +68,20 @@ function App() {
       id: dataId.current,
     };
     dataId.current += 1;
-    setData([newItem, ...data]);
-  };
+  }, []);
 
-  const onRemove = (targetId) => {
+  const onRemove = useCallback((targetId) => {
     alert(`${targetId}번째 게시물이 삭제되었습니다.`);
-    const newData = data.filter((e) => e.id !== targetId);
-    setData(newData);
-  };
+    dispatch({ type: "REMOVE", targetId });
+  }, []);
 
-  const onEdit = (targetId, newContent) => {
+  const onEdit = useCallback((targetId, newContent) => {
     alert(`${targetId}게시물이 수정되었습니다.`);
-    setData(
-      data.map((e) =>
-        e.id === targetId ? { ...data, content: newContent } : e
-      )
-    );
-  };
+    dispatch({ type: "EDIT", targetId, newContent });
+  }, []);
 
+  //useMemo : 최적화 연산결과 재사용
   const getDiaryAnalysis = useMemo(() => {
-    console.log("일기 분석 시작");
     const goodCount = data.filter((e) => e.emotion >= 3).length;
     const badCount = data.length - goodCount;
 
