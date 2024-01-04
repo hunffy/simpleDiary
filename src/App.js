@@ -1,7 +1,13 @@
 import "./App.css";
 import DiaryEditor from "./DiaryEditor";
 import DiaryList from "./DiaryList";
-import { useEffect, useRef, useMemo, useCallback, useReducer } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+  useReducer,
+} from "react";
 const reducer = (state, action) => {
   switch (action.type) {
     case "INIT": {
@@ -24,6 +30,10 @@ const reducer = (state, action) => {
       return state;
   }
 };
+
+export const DiaryStateContext = React.createContext();
+
+export const DiaryDispatchContext = React.createContext();
 
 function App() {
   const [data, dispatch] = useReducer(reducer, []);
@@ -80,6 +90,11 @@ function App() {
     dispatch({ type: "EDIT", targetId, newContent });
   }, []);
 
+  //useMemo를 사용하여 묶지않게되면 App컴포넌트가 재생성될때 Memodispatches객체가 재생성되기때문에
+  const memoizeDispatches = useMemo(() => {
+    return { onCreate, onRemove, onEdit };
+  }, []);
+
   //useMemo : 최적화 연산결과 재사용
   const getDiaryAnalysis = useMemo(() => {
     const goodCount = data.filter((e) => e.emotion >= 3).length;
@@ -93,14 +108,18 @@ function App() {
   const { goodCount, badCount, goodRatio } = getDiaryAnalysis;
 
   return (
-    <div className="App">
-      <DiaryEditor onCreate={onCreate} />
-      <div>전체일기:{data.length}</div>
-      <div>기분 좋은 일기 갯수:{goodCount}</div>
-      <div>기분 안좋은 일기 갯수:{badCount}</div>
-      <div>기분 좋은 일기 비율:{goodRatio} </div>
-      <DiaryList diaryList={data} onRemove={onRemove} onEdit={onEdit} />
-    </div>
+    <DiaryStateContext.Provider value={data}>
+      <DiaryDispatchContext.Provider value={memoizeDispatches}>
+        <div className="App">
+          <DiaryEditor />
+          <div>전체일기:{data.length}</div>
+          <div>기분 좋은 일기 갯수:{goodCount}</div>
+          <div>기분 안좋은 일기 갯수:{badCount}</div>
+          <div>기분 좋은 일기 비율:{goodRatio} </div>
+          <DiaryList />
+        </div>
+      </DiaryDispatchContext.Provider>
+    </DiaryStateContext.Provider>
   );
 }
 

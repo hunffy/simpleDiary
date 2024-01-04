@@ -1,14 +1,9 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useContext } from "react";
+import { DiaryDispatchContext } from "./App";
 
-const DiaryItem = ({
-  author,
-  content,
-  created_date,
-  emotion,
-  id,
-  onRemove,
-  onEdit,
-}) => {
+const DiaryItem = ({ author, content, created_date, emotion, id }) => {
+  const { onRemove, onEdit } = useContext(DiaryDispatchContext);
+
   useEffect(() => {
     console.log(`${id}번째 아이템 랜더`);
   });
